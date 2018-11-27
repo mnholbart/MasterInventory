@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ae0b18265c68834393df14b8a02389f, type: 3}
+  m_Name: TestAmmo
+  m_EditorClassIdentifier: 
+  MyItemType: {fileID: 11400000, guid: edc0ac6edf68aaf40bedd04879b0a208, type: 2}
+  ItemInstancePrefab: {fileID: 0}
+  StaticAttributes:
+  - Key: MaxStackSize
+    isStatic: 1
+    isRequired: 1
+    dataType: 1
+    FloatValue: 50
+    IntValue: 40
+    BoolValue: 0
+    StringValue: 
+    InventoryItemValue: {fileID: 0}
+  SerializedAttributes:
+  - Key: CurrentStackSize
+    isStatic: 0
+    isRequired: 1
+    dataType: 1
+    FloatValue: 15
+    IntValue: 15
+    BoolValue: 0
+    StringValue: 
+    InventoryItemValue: {fileID: 0}

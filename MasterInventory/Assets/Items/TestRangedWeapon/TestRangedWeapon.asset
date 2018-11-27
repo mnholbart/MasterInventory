@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7ae0b18265c68834393df14b8a02389f, type: 3}
+  m_Name: TestRangedWeapon
+  m_EditorClassIdentifier: 
+  MyItemType: {fileID: 11400000, guid: 099cd7608b42fc0458e2157475b12409, type: 2}
+  ItemInstancePrefab: {fileID: 1070884330980846, guid: 06919ef502d2aa64ca0558a83dbc0eb6,
+    type: 2}
+  StaticAttributes:
+  - Key: MaxAmmo
+    isStatic: 1
+    isRequired: 1
+    dataType: 1
+    FloatValue: 0
+    IntValue: 50
+    BoolValue: 0
+    StringValue: 
+    InventoryItemValue: {fileID: 0}
+  - Key: AmmoType
+    isStatic: 1
+    isRequired: 1
+    dataType: 4
+    FloatValue: 0
+    IntValue: 0
+    BoolValue: 0
+    StringValue: 
+    InventoryItemValue: {fileID: 11400000, guid: 6a6a864e069f95a449df8c0bb4aff50e,
+      type: 2}
+  - Key: CanUseLaserSight
+    isStatic: 1
+    isRequired: 1
+    dataType: 2
+    FloatValue: 0
+    IntValue: 0
+    BoolValue: 1
+    StringValue: 
+    InventoryItemValue: {fileID: 0}
+  SerializedAttributes:
+  - Key: CurrentAmmo
+    isStatic: 0
+    isRequired: 1
+    dataType: 1
+    FloatValue: 0
+    IntValue: 25
+    BoolValue: 0
+    StringValue: 
+    InventoryItemValue: {fileID: 0}
+  - Key: HasLaserSight
+    isStatic: 0
+    isRequired: 1
+    dataType: 2
+    FloatValue: 0
+    IntValue: 0
+    BoolValue: 1
+    StringValue: 
+    InventoryItemValue: {fileID: 0}
