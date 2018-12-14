@@ -83,6 +83,12 @@ namespace MasterInventory
             Dictionary<string, ItemAttribute> lookup = new Dictionary<string, ItemAttribute>();
             foreach (ItemAttribute attribute in InventoryItemAttributes.GetAllAttributes())
             {
+                if (string.IsNullOrEmpty(attribute.Key))
+                    continue;
+
+                if (lookup.ContainsKey(attribute.Key))
+                    Debug.LogError("Duplicate key in lookup<string, ItemAttribute>(): " + "\"" + attribute.Key + "\"", this);
+
                 lookup.Add(attribute.Key, attribute);
                 attribute.isRequired = false;
             }

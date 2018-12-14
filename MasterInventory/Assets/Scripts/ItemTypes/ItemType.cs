@@ -35,7 +35,5 @@ namespace MasterInventory
                 UnityEditor.EditorUtility.SetDirty(this);
             }
         }
-        
-        
     }
 }

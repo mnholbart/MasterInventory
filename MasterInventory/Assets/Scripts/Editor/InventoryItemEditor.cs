@@ -26,7 +26,7 @@ namespace MasterInventory
 
         private void PopulateAttributeTypes()
         {
-            foreach (Type t in Assembly.GetAssembly(typeof(ItemAttribute)).GetTypes().Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(ItemAttribute))))
+            foreach (Type t in ItemAttributes.RegisteredTypes.Select(t => t.type))
             {
                 string typeName = t.Name;
                 typeName = typeName.Replace("Attribute", "");
@@ -125,39 +125,16 @@ namespace MasterInventory
                 }
                 EditorGUI.EndDisabledGroup();
                 EditorGUILayout.LabelField("Value", GUILayout.MaxWidth(50));
-                
-                var current = itemAttribute.GetObjectValue();
-                if (current is float)
-                {
-                    float s = EditorGUILayout.DelayedFloatField((float)current);
-                    if (s != (float)current)
-                        (itemAttribute as FloatAttribute).SetDefaultValue(s);
-                }
 
-                if (current is bool)
+                foreach (ItemAttributes.RegisteredAttributeType registeredType in ItemAttributes.RegisteredTypes)
                 {
-                    bool s = EditorGUILayout.Toggle((bool)current);
-                    if (s != (bool)current)
-                        (itemAttribute as BoolAttribute).SetDefaultValue(s);
-                }
-                if (current is string)
-                {
-                    string s = EditorGUILayout.DelayedTextField((string)current);
-                    if (s != (string)current)
-                        (itemAttribute as StringAttribute).SetDefaultValue(s);
-                }
-                if (current is int)
-                {
-                    int s = EditorGUILayout.DelayedIntField((int)current);
-                    if (s != (int)current)
-                        (itemAttribute as IntAttribute).SetDefaultValue(s);
-                }
-
-                if (itemAttribute is InventoryItemAttribute)
-                {
-                    InventoryItem s = (InventoryItem)EditorGUILayout.ObjectField((InventoryItem)current, typeof(InventoryItem), false);
-                    if (s != (InventoryItem)current)
-                        (itemAttribute as InventoryItemAttribute).SetDefaultValue(s);
+                    if (registeredType.type == itemAttribute.GetType())
+                    {
+                        object ret = registeredType.EditorDelegate.Invoke(itemAttribute.GetObjectValue());
+                        if (ret != itemAttribute.GetObjectValue())
+                            itemAttribute.SetObjectValue(ret);
+                        break;
+                    }
                 }
 
 

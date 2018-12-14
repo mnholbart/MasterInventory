@@ -39,17 +39,59 @@ MonoBehaviour:
   m_Name: InventoryState
   m_EditorClassIdentifier: 
   OwnedItemData:
-  - guid: 575823
-    Item: {fileID: 11400000, guid: c42914dbeba371f4e84d191bed3cedf0, type: 2}
+  - guid: 214467
+    Item: {fileID: 11400000, guid: 8a547a955d66f914c83ba72d1449d5b8, type: 2}
     EquipmentSlot: {fileID: 0}
     InventorySlot: 0
     ItemAttributeData:
       FloatAttributes: []
       IntAttributes:
-      - Key: CurrentAmmo
+      - Key: CurrentStackSize
         isStatic: 0
         isRequired: 1
-        _staticValue: 0
+        _staticValue: 50
+      BoolAttributes: []
+      StringAttributes: []
+      InventoryItemAttributes: []
+  - guid: 259806
+    Item: {fileID: 11400000, guid: 8a547a955d66f914c83ba72d1449d5b8, type: 2}
+    EquipmentSlot: {fileID: 0}
+    InventorySlot: 1
+    ItemAttributeData:
+      FloatAttributes: []
+      IntAttributes:
+      - Key: CurrentStackSize
+        isStatic: 0
+        isRequired: 1
+        _staticValue: 50
+      BoolAttributes: []
+      StringAttributes: []
+      InventoryItemAttributes: []
+  - guid: 336248
+    Item: {fileID: 11400000, guid: 8a547a955d66f914c83ba72d1449d5b8, type: 2}
+    EquipmentSlot: {fileID: 0}
+    InventorySlot: 2
+    ItemAttributeData:
+      FloatAttributes: []
+      IntAttributes:
+      - Key: CurrentStackSize
+        isStatic: 0
+        isRequired: 1
+        _staticValue: 50
+      BoolAttributes: []
+      StringAttributes: []
+      InventoryItemAttributes: []
+  - guid: 522590
+    Item: {fileID: 11400000, guid: 8a547a955d66f914c83ba72d1449d5b8, type: 2}
+    EquipmentSlot: {fileID: 0}
+    InventorySlot: 3
+    ItemAttributeData:
+      FloatAttributes: []
+      IntAttributes:
+      - Key: CurrentStackSize
+        isStatic: 0
+        isRequired: 1
+        _staticValue: 20
       BoolAttributes: []
       StringAttributes: []
       InventoryItemAttributes: []

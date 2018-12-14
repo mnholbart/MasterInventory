@@ -19,11 +19,11 @@ MonoBehaviour:
     - Key: CurrentStackSize
       isStatic: 0
       isRequired: 1
-      _staticValue: 15
+      _staticValue: 0
     - Key: MaxStackSize
       isStatic: 1
       isRequired: 1
-      _staticValue: 50
+      _staticValue: 0
     BoolAttributes: []
     StringAttributes: []
     InventoryItemAttributes: []

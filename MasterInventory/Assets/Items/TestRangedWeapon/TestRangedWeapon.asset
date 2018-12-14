@@ -20,11 +20,11 @@ MonoBehaviour:
     - Key: CurrentAmmo
       isStatic: 0
       isRequired: 1
-      _staticValue: 4
+      _staticValue: 0
     - Key: MaxAmmo
       isStatic: 1
       isRequired: 1
-      _staticValue: 44
+      _staticValue: 0
     BoolAttributes: []
     StringAttributes: []
     InventoryItemAttributes:

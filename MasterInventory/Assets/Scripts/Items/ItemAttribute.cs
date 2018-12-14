@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEditor;
 
 namespace MasterInventory
 {
@@ -156,15 +158,38 @@ namespace MasterInventory
     [System.Serializable]
     public class ItemAttributes
     {
-        //Register a type and add a List<type> to enable InventoryItem functionality with that attribute
-        //Extend ItemAttribute<T> with ItemAttribute<type> in ItemAttribute.cs
-        //Lastly add it to the list in the InventoryItemEditor with the proper object/value field
-        List<Type> RegisteredTypes = new List<Type>() {
-            typeof(IntAttribute),
-            typeof(BoolAttribute),
-            typeof(StringAttribute),
-            typeof(FloatAttribute),
-            typeof(InventoryItemAttribute)
+        [System.Serializable]
+        public class RegisteredAttributeType
+        {
+            public Type type;
+            
+            public Func<object, object> EditorDelegate;
+        }
+
+        //Register a new RegisteredAttributeType using a new type created above extending ItemAttribute<T>
+        //Give it the proper editor display field
+        //Add a List<T> TAttributes = new List<T>(); below
+        public static List<RegisteredAttributeType> RegisteredTypes = new List<RegisteredAttributeType>() {
+            new RegisteredAttributeType() { type = typeof(IntAttribute),
+                EditorDelegate = (object value) => 
+                { return EditorGUILayout.DelayedIntField((int)value); }
+            },
+            new RegisteredAttributeType() { type = typeof(BoolAttribute),
+                EditorDelegate = (object value) =>
+                { return EditorGUILayout.Toggle((bool)value); }
+            },
+            new RegisteredAttributeType() { type = typeof(StringAttribute),
+                EditorDelegate = (object value) =>
+                { return EditorGUILayout.DelayedTextField((string)value); }
+            },
+            new RegisteredAttributeType() { type = typeof(FloatAttribute),
+                EditorDelegate = (object value) =>
+                { return EditorGUILayout.DelayedFloatField((float)value); }
+            },
+            new RegisteredAttributeType() { type = typeof(InventoryItemAttribute),
+                EditorDelegate = (object value) =>
+                { return EditorGUILayout.ObjectField((InventoryItem)value, typeof(InventoryItem), false); }
+            },
         };
 
         public List<FloatAttribute> FloatAttributes = new List<FloatAttribute>();
@@ -177,7 +202,7 @@ namespace MasterInventory
         {
             List<ItemAttribute> allAttributes = new List<ItemAttribute>();
 
-            foreach (Type t in RegisteredTypes)
+            foreach (Type t in RegisteredTypes.Select(t => t.type))
             {
                 IList l = GetAttributeList(t);
                 foreach (object o in l)
@@ -227,7 +252,7 @@ namespace MasterInventory
 
         public void ClearAttributes()
         {
-            foreach (Type t in RegisteredTypes)
+            foreach (Type t in RegisteredTypes.Select(t => t.type))
             {
                 IList l = GetAttributeList(t);
                 l.Clear();
