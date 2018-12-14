@@ -17,9 +17,9 @@ namespace MasterInventory
             if (IsStackable)
             {
                 if (!RequiredAttributes.Any(t => t.Key == "CurrentStackSize"))
-                    RequiredAttributes.Add(new RequiredAttribute() { Key = "CurrentStackSize", AttributeDataType = ItemAttribute.DataType.Int, Serialized = true });
+                    RequiredAttributes.Add(new RequiredAttribute(typeof(IntAttribute)) { Key = "CurrentStackSize", Serialized = true});
                 if (!RequiredAttributes.Any(t => t.Key == "MaxStackSize"))
-                    RequiredAttributes.Add(new RequiredAttribute() { Key = "MaxStackSize", AttributeDataType = ItemAttribute.DataType.Int, Serialized = false });
+                    RequiredAttributes.Add(new RequiredAttribute(typeof(IntAttribute)) { Key = "MaxStackSize", Serialized = false });
             }
             else
             {

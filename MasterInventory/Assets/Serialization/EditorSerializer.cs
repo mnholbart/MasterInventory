@@ -36,7 +36,6 @@ public class EditorSerializer : Serializer
         }
         else
         {
-            Debug.LogError("Cannot load game data!");
             success = false;
         }
         

@@ -17,15 +17,14 @@ namespace MasterInventory
 
         public void SetAmmoUse()
         {
-            Debug.Log("ASD");
             if (UsesAmmunition)
             {
                 if (!RequiredAttributes.Any(t => t.Key == "CurrentAmmo"))
-                    RequiredAttributes.Add(new RequiredAttribute() { Key = "CurrentAmmo", AttributeDataType = ItemAttribute.DataType.Int, Serialized = true });
+                    RequiredAttributes.Add(new RequiredAttribute(typeof(IntAttribute)) { Key = "CurrentAmmo", Serialized = true });
                 if (!RequiredAttributes.Any(t => t.Key == "MaxAmmo"))
-                    RequiredAttributes.Add(new RequiredAttribute() { Key = "MaxAmmo", AttributeDataType = ItemAttribute.DataType.Int, Serialized = false });
+                    RequiredAttributes.Add(new RequiredAttribute(typeof(IntAttribute)) { Key = "MaxAmmo", Serialized = false });
                 if (!RequiredAttributes.Any(t => t.Key == "AmmoType"))
-                    RequiredAttributes.Add(new RequiredAttribute() { Key = "AmmoType", AttributeDataType = ItemAttribute.DataType.InventoryItem, Serialized = false });
+                    RequiredAttributes.Add(new RequiredAttribute(typeof(InventoryItemAttribute)) { Key = "AmmoType", Serialized = false });
             }
             else
             {
@@ -39,13 +38,12 @@ namespace MasterInventory
 
         public void SetUsesLaserSight()
         {
-            Debug.Log("ASD");
             if (UsesLaserSight)
             {
                 if (!RequiredAttributes.Any(t => t.Key == "CanUseLaserSight"))
-                    RequiredAttributes.Add(new RequiredAttribute() { Key = "CanUseLaserSight", AttributeDataType = ItemAttribute.DataType.Bool, Serialized = false });
+                    RequiredAttributes.Add(new RequiredAttribute(typeof(BoolAttribute)) { Key = "CanUseLaserSight", Serialized = false });
                 if (!RequiredAttributes.Any(t => t.Key == "HasLaserSight"))
-                    RequiredAttributes.Add(new RequiredAttribute() { Key = "HasLaserSight", AttributeDataType = ItemAttribute.DataType.Bool, Serialized = true });
+                    RequiredAttributes.Add(new RequiredAttribute(typeof(BoolAttribute)) { Key = "HasLaserSight", Serialized = true });
             }
             else
             {

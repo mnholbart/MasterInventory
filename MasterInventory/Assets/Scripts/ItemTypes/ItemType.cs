@@ -13,7 +13,12 @@ namespace MasterInventory
         {
             public string Key;
             public bool Serialized;
-            public ItemAttribute.DataType AttributeDataType;
+            public string TypeString;
+
+            public RequiredAttribute(System.Type T)
+            {
+                TypeString = T.FullName;
+            }
         }
 
         public void UpdateMyItems()
@@ -30,5 +35,7 @@ namespace MasterInventory
                 UnityEditor.EditorUtility.SetDirty(this);
             }
         }
+        
+        
     }
 }

@@ -9,26 +9,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 7ae0b18265c68834393df14b8a02389f, type: 3}
-  m_Name: TestRangedWeapon
+  m_Name: RangedAmmo
   m_EditorClassIdentifier: 
-  MyItemType: {fileID: 11400000, guid: 26810d9769578d34a9088acecb8ef82b, type: 2}
-  ItemInstancePrefab: {fileID: 1070884330980846, guid: 06919ef502d2aa64ca0558a83dbc0eb6,
-    type: 2}
+  MyItemType: {fileID: 11400000, guid: e31fd64eca073654b88beff92ce44918, type: 2}
+  ItemInstancePrefab: {fileID: 0}
   InventoryItemAttributes:
     FloatAttributes: []
     IntAttributes:
-    - Key: CurrentAmmo
+    - Key: CurrentStackSize
       isStatic: 0
       isRequired: 1
-      _staticValue: 4
-    - Key: MaxAmmo
+      _staticValue: 15
+    - Key: MaxStackSize
       isStatic: 1
       isRequired: 1
-      _staticValue: 44
+      _staticValue: 50
     BoolAttributes: []
     StringAttributes: []
-    InventoryItemAttributes:
-    - Key: AmmoType
-      isStatic: 1
-      isRequired: 1
-      _staticValue: {fileID: 0}
+    InventoryItemAttributes: []

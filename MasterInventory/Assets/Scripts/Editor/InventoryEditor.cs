@@ -31,6 +31,10 @@ namespace MasterInventory
 
             SlotLookup = new List<EquipmentSlotLookup>();
             SlotLookup.Add(new EquipmentSlotLookup() { name = "None", slot = null });
+
+            if (inventory.EquipmentSlots == null)
+                return;
+
             foreach (EquipmentSlot slot in inventory.EquipmentSlots)
             {
                 SlotLookup.Add(new EquipmentSlotLookup() { name = slot.name, slot = slot });

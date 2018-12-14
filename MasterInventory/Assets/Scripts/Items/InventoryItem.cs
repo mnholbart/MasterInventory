@@ -3,19 +3,23 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEditor;
 using System.Linq;
+using System;
+using System.Reflection;
 
 namespace MasterInventory
 {
     [CreateAssetMenu(menuName = "Inventory/Create Item")]
-    [System.Serializable]
+    [Serializable]
     public class InventoryItem : ScriptableObject
     {
         public ItemType MyItemType;
         public GameObject ItemInstancePrefab;
-        public List<ItemAttribute> StaticAttributes = new List<ItemAttribute>();
-        public List<ItemAttribute> SerializedAttributes = new List<ItemAttribute>();
 
-        private Dictionary<string, ItemAttribute> AttributeLookup;
+        public ItemAttributes InventoryItemAttributes = new ItemAttributes();
+
+        public Dictionary<string, ItemAttribute> SerializedAttributeLookup;
+        public Dictionary<string, ItemAttribute> StaticAttributeLookup;
+        public Dictionary<string, ItemAttribute> AttributeLookup;
 
         public void Initialize()
         {
@@ -24,55 +28,51 @@ namespace MasterInventory
 
         private void InitializeAttributeLookupTable()
         {
+            SerializedAttributeLookup = new Dictionary<string, ItemAttribute>();
+            StaticAttributeLookup = new Dictionary<string, ItemAttribute>();
             AttributeLookup = new Dictionary<string, ItemAttribute>();
-            foreach (ItemAttribute attribute in StaticAttributes.Union(SerializedAttributes))
+
+            foreach (ItemAttribute attribute in InventoryItemAttributes.GetAllAttributes())
             {
+                if (attribute.isStatic)
+                    StaticAttributeLookup.Add(attribute.Key, attribute);
+                else
+                    SerializedAttributeLookup.Add(attribute.Key, attribute);
+
                 AttributeLookup.Add(attribute.Key, attribute);
             }
         }
 
-        public T GetAttributeValue<T>(string key, string guid = null)
+        public T GetAttribute<T>(string key, string guid = null) where T : ItemAttribute
         {
-            ItemAttribute attribute;
-            AttributeLookup.TryGetValue(key, out attribute);
-            if (attribute.GetMyType() == typeof(T))
-            {
-                T value = (T)attribute.GetValue(guid);
-                return value;
-            }
-            else
-            {
-                Debug.LogWarning("Type mismatch for attribute with key: " + attribute.Key + " - Type: " + attribute.GetMyType(), this);
-                return default(T);
-            }
-        }
+            if (!AttributeLookup.ContainsKey(key))
+                Debug.LogErrorFormat("Key: {0} does not exist for any attribute for item: {1}", key, name, this);
 
-        public ItemAttribute GetAttribute(string key, string guid = null)
-        {
             var attribute = AttributeLookup[key];
-            if (!attribute.isStatic)
-                return attribute.SerializedAttributeLookup[guid];
-            else return attribute;
+            if (!attribute.isStatic && guid != null)
+                return (T)attribute.SerializedAttributeLookup[guid];
+            else return (T)attribute;
         }
 
-        public ItemAttribute AddItemAttribute(bool isSerialized = false)
+        public ItemAttribute AddItemAttribute(string typeString, bool isSerialized = false)
         {
-            ItemAttribute attribute = new ItemAttribute();
+            Type t = Type.GetType(typeString);
+            if (!t.IsSubclassOf(typeof(ItemAttribute)))
+            {
+                Debug.LogErrorFormat("Trying to create new ItemAttribute with type: {0} which isn't a subclass of type: {1}", t, typeof(ItemAttribute));
+                return null;
+            }
+            ItemAttribute attribute = (ItemAttribute)Activator.CreateInstance(t);
+
             attribute.isStatic = !isSerialized;
-            if (isSerialized)
-            {
-                SerializedAttributes.Add(attribute);
-            }
-            else
-            {
-                StaticAttributes.Add(attribute);
-            }
+            InventoryItemAttributes.AddAttribute(attribute);
+
             return attribute;
         }
 
         public void AddSerializedReference(string guid, ItemAttribute attribute)
         {
-            AttributeLookup[attribute.Key].SerializedAttributeLookup.Add(guid, attribute);
+            SerializedAttributeLookup[attribute.Key].SerializedAttributeLookup.Add(guid, attribute);
         }
 
         /// <summary>
@@ -80,15 +80,15 @@ namespace MasterInventory
         /// </summary>
         public void Refresh()
         {
-            if (MyItemType == null)
-                return;
-
             Dictionary<string, ItemAttribute> lookup = new Dictionary<string, ItemAttribute>();
-            foreach (ItemAttribute attribute in StaticAttributes.Union(SerializedAttributes))
+            foreach (ItemAttribute attribute in InventoryItemAttributes.GetAllAttributes())
             {
                 lookup.Add(attribute.Key, attribute);
                 attribute.isRequired = false;
             }
+
+            if (MyItemType == null)
+                return;
 
             foreach (ItemType.RequiredAttribute required in MyItemType.RequiredAttributes)
             {
@@ -96,13 +96,11 @@ namespace MasterInventory
                 {
                     var attr = lookup[required.Key];
                     attr.isRequired = true;
-                    attr.MyDataType = required.AttributeDataType;
                 }
                 else
                 {
-                    var attr = AddItemAttribute(required.Serialized);
+                    var attr = AddItemAttribute(required.TypeString, required.Serialized);
                     attr.Key = required.Key;
-                    attr.MyDataType = required.AttributeDataType;
                     attr.isRequired = true;
                 }
             }

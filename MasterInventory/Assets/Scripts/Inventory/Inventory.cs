@@ -54,7 +54,7 @@ namespace MasterInventory
 
             if (itemType is EquippableType)
             {
-                return data.Item.name;
+                return data.Item.name + ": " + data.Item.GetAttribute<IntAttribute>("CurrentAmmo", data.guid).GetValue();
             }
             else if (itemType is ConsumableType)
             {
@@ -67,7 +67,7 @@ namespace MasterInventory
 
                 if (resourceType.IsStackable)
                 {
-                    label += ": " + data.Item.GetAttribute("CurrentStackSize", data.guid).IntValue;
+                    label += ": " + data.Item.GetAttribute<IntAttribute>("CurrentStackSize", data.guid).GetValue();
                 }
                 return label;
             }
@@ -130,13 +130,17 @@ namespace MasterInventory
             serializer.Deserialize("inventory", CurrentInventoryState, out success);
 
             if (!success)
-                Debug.LogError("Failed to deserialize inventory");
+            {
+                Save();
+                Debug.LogError("Failed to deserialize inventory, creating new save");
+                return;
+            }
 
             foreach (EquipmentSlot slot in EquipmentSlots)
                 slot.ResetSlot();
             InventorySlotsReference.ResetInventory(NumInventorySlots);
             CurrentInventoryState.PostDeserialize(serializer, InventorySlotsReference);
-
+            
             OnInventoryLoaded.Invoke();
             //Debug.Log("Loaded Inventory");
         }

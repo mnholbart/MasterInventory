@@ -1,11 +1,13 @@
-﻿using System.Collections;
+﻿using System;
+using System.Reflection;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 namespace MasterInventory
 {
-    [System.Serializable]
-    public class ItemAttribute
+    [Serializable]
+    public abstract class ItemAttribute
     {
         public string Key = "";
         public bool isStatic = true;
@@ -15,82 +17,221 @@ namespace MasterInventory
         /// Runtime lookup, set by the inventory state, matches a GUID string to item attribute data
         /// </summary>
         public Dictionary<string, ItemAttribute> SerializedAttributeLookup = new Dictionary<string, ItemAttribute>();
+        
+        [SerializeField] abstract protected object ObjectValue { get; set; }
 
-        [SerializeField] private DataType dataType = DataType.Float;
-        public DataType MyDataType
+        public virtual object GetObjectValue(string guid = null)
         {
-            get { return dataType; }
-            set
-            {
-                dataType = value;
-            }
+            var value = (isStatic || guid == null) ? ObjectValue : SerializedAttributeLookup[guid].ObjectValue;
+            return value;
         }
 
-        public float FloatValue;
-        public int IntValue;
-        public bool BoolValue;
-        public string StringValue;
-        public InventoryItem InventoryItemValue;
-
-        public object GetValue(string guid = null)
+        public virtual void SetObjectValue(object newValue, string guid = null)
         {
-            if (MyDataType == DataType.Float)
-            {
-                return isStatic ? FloatValue : SerializedAttributeLookup[guid].FloatValue;
-            }
-            else if (MyDataType == DataType.Int)
-                {
-                    return isStatic ? IntValue : SerializedAttributeLookup[guid].IntValue;
-            }
-            else if (MyDataType == DataType.Bool)
-            {
-                return isStatic ? BoolValue : SerializedAttributeLookup[guid].BoolValue;
-            }
-            else if (MyDataType == DataType.String)
-            {
-                return isStatic ? StringValue : SerializedAttributeLookup[guid].StringValue;
-            }
-            else if (MyDataType == DataType.InventoryItem)
-            {
-                return isStatic ? InventoryItemValue : SerializedAttributeLookup[guid].InventoryItemValue;
-            }
-            return null;
+            if (isStatic || guid == null)
+                ObjectValue = newValue;
+            else
+                SerializedAttributeLookup[guid].ObjectValue = newValue;
+        }
+
+        public string GetAttributeName()
+        {
+            return GetType().ToString().Split('.')[1];
         }
         
-        public enum DataType
-        {
-            Float,
-            Int,
-            Bool,
-            String,
-            InventoryItem,
-        }
-        public System.Type GetMyType()
-        {
-            switch (MyDataType)
-            {
-                case DataType.Float: return typeof(float);
-                case DataType.Int: return typeof(int);
-                case DataType.Bool: return typeof(bool);
-                case DataType.String: return typeof(string);
-                case DataType.InventoryItem: return typeof(InventoryItem);
-            }
-            return null;
-        }
+        public abstract void InitializeSerializedValue();
+        public abstract void SaveSerializedValue();
 
-        public ItemAttribute() { }
-        public ItemAttribute(ItemAttribute copy)
+        protected ItemAttribute() { }
+        protected ItemAttribute(ItemAttribute copy)
         {
             Key = copy.Key;
             isStatic = copy.isStatic;
-            MyDataType = copy.MyDataType;
-
-            FloatValue = copy.FloatValue;
-            IntValue = copy.IntValue;
-            BoolValue = copy.BoolValue;
-            StringValue = copy.StringValue;
-            InventoryItemValue = copy.InventoryItemValue;
+            isRequired = copy.isRequired;
         }
     }
 
+    [Serializable]
+    public abstract class ItemAttribute<T> : ItemAttribute
+    {
+        public ItemAttribute(): base() { }
+        public ItemAttribute(ItemAttribute<T> copy) : base(copy)
+        {
+            SerializedValue = copy.SerializedValue;
+            StaticValue = copy.StaticValue;
+            InitializeSerializedValue();
+        }
+
+        protected T SerializedValue { get; set; }
+        protected virtual T StaticValue { get; set; }
+
+        protected override object ObjectValue
+        {
+            get { return isStatic ? StaticValue : SerializedValue; }
+            set {
+                StaticValue = (T)value;
+                SerializedValue = (T)value;
+            }
+        }
+
+        public override void InitializeSerializedValue()
+        {
+            SerializedValue = StaticValue;
+        }
+
+        public override void SaveSerializedValue()
+        {
+            StaticValue = SerializedValue;
+        }
+
+        public T GetValue()
+        {
+            return (T)ObjectValue;
+        }
+
+        public void SetValue(T value)
+        {
+            ObjectValue = value;
+        }
+
+        public void SetDefaultValue(T value)
+        {
+            StaticValue = value;
+        }
+    }
+
+    [Serializable]
+    public class FloatAttribute : ItemAttribute<float>
+    {
+        public FloatAttribute() { }
+        public FloatAttribute(ItemAttribute<float> copy): base(copy) { }
+
+        [SerializeField] private float _staticValue;
+        protected override float StaticValue { get { return _staticValue; } set { _staticValue = value; } }
+        
+    }
+
+    [Serializable]
+    public class IntAttribute : ItemAttribute<int>
+    {
+        public IntAttribute() { }
+        public IntAttribute(ItemAttribute<int> copy) : base(copy) { }
+
+        [SerializeField] private int _staticValue;
+        protected override int StaticValue { get { return _staticValue; } set { _staticValue = value; } }
+    }
+
+    [Serializable]
+    public class BoolAttribute : ItemAttribute<bool>
+    {
+        public BoolAttribute() { }
+        public BoolAttribute(ItemAttribute<bool> copy) : base(copy) {  }
+
+        [SerializeField] private bool _staticValue;
+        protected override bool StaticValue { get { return _staticValue; } set { _staticValue = value; } }
+    }
+
+    [Serializable]
+    public class StringAttribute : ItemAttribute<string>
+    {
+        public StringAttribute() { }
+        public StringAttribute(ItemAttribute<string> copy) : base(copy) {  }
+
+        [SerializeField] private string _staticValue;
+        protected override string StaticValue { get { return _staticValue; } set { _staticValue = value; } }
+
+    }
+
+    [Serializable]
+    public class InventoryItemAttribute : ItemAttribute<InventoryItem>
+    {
+        public InventoryItemAttribute() { }
+        public InventoryItemAttribute(ItemAttribute<InventoryItem> copy) : base(copy) {  }
+
+    [SerializeField] private InventoryItem _staticValue;
+        protected override InventoryItem StaticValue { get { return _staticValue; } set { _staticValue = value; } }
+
+    }
+
+    [System.Serializable]
+    public class ItemAttributes
+    {
+        //Register a type and add a List<type> to enable InventoryItem functionality with that attribute
+        //Extend ItemAttribute<T> with ItemAttribute<type> in ItemAttribute.cs
+        //Lastly add it to the list in the InventoryItemEditor with the proper object/value field
+        List<Type> RegisteredTypes = new List<Type>() {
+            typeof(IntAttribute),
+            typeof(BoolAttribute),
+            typeof(StringAttribute),
+            typeof(FloatAttribute),
+            typeof(InventoryItemAttribute)
+        };
+
+        public List<FloatAttribute> FloatAttributes = new List<FloatAttribute>();
+        public List<IntAttribute> IntAttributes = new List<IntAttribute>();
+        public List<BoolAttribute> BoolAttributes = new List<BoolAttribute>();
+        public List<StringAttribute> StringAttributes = new List<StringAttribute>();
+        public List<InventoryItemAttribute> InventoryItemAttributes = new List<InventoryItemAttribute>();
+
+        public List<ItemAttribute> GetAllAttributes()
+        {
+            List<ItemAttribute> allAttributes = new List<ItemAttribute>();
+
+            foreach (Type t in RegisteredTypes)
+            {
+                IList l = GetAttributeList(t);
+                foreach (object o in l)
+                {
+                    allAttributes.Add((ItemAttribute)o);
+                }
+            }
+
+            return allAttributes;
+        }
+
+        public void AddAttribute(ItemAttribute attribute)
+        {
+            IList collection = GetAttributeList(attribute);
+
+            collection.Add(attribute);
+        }
+
+        public void RemoveAttribute(ItemAttribute attribute)
+        {
+            IList collection = GetAttributeList(attribute);
+
+            collection.Remove(attribute);
+        }
+
+        public IList GetAttributeList(ItemAttribute attribute)
+        {
+            return GetAttributeList(attribute.GetType());
+        }
+
+        public IList GetAttributeList(Type type)
+        {
+            FieldInfo listField = null;
+            foreach (FieldInfo f in GetType().GetFields(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance))
+            {
+                object v = f.GetValue(this);
+                if (v.GetType().GetGenericArguments()[0] == type)
+                {
+                    listField = f;
+                    break;
+                }
+            }
+            object val = listField.GetValue(this);
+            IList collection = (IList)val;
+            return collection;
+        }
+
+        public void ClearAttributes()
+        {
+            foreach (Type t in RegisteredTypes)
+            {
+                IList l = GetAttributeList(t);
+                l.Clear();
+            }
+        }
+    }
 }

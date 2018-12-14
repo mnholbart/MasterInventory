@@ -65,12 +65,16 @@ namespace MasterInventory
 
         public void GiveItem(ItemPickupData item, string newGUID)
         {
+            
             if (item.PickupItem.MyItemType is ResourceType && (item.PickupItem.MyItemType as ResourceType).IsStackable)
             {
-                var amountAttribute = item.SerializedAttributeValues.Find(t => t.Key == "CurrentStackSize");
-                int amountBackfilled = BackfillResources(item.PickupItem, amountAttribute.IntValue);
-                amountAttribute.IntValue -= amountBackfilled;
-                if (amountAttribute.IntValue <= 0)
+                IntAttribute amountAttribute = (IntAttribute)item.SerializedAttributeValues.Find(t => t.Key == "CurrentStackSize");
+                int amountBackfilled = BackfillResources(item.PickupItem, amountAttribute.GetValue());
+
+                int newAmount = amountAttribute.GetValue() - amountBackfilled;
+                amountAttribute.SetValue(newAmount);
+
+                if (amountAttribute.GetValue() <= 0)
                     return;
             }
 
@@ -85,14 +89,20 @@ namespace MasterInventory
             {
                 if (data.Item == resource)
                 {
-                    var maxStackSize = data.Item.GetAttribute("MaxStackSize");
-                    var currentStackSize = data.Item.GetAttribute("CurrentStackSize", data.guid);
+                    //Get the stack size attributes
+                    var maxStackSize = data.Item.GetAttribute<IntAttribute>("MaxStackSize");
+                    var currentStackSize = data.Item.GetAttribute<IntAttribute>("CurrentStackSize", data.guid);
 
-                    int maxNeeded = maxStackSize.IntValue - currentStackSize.IntValue;
+                    //Find out how much we need to fill the current stack
+                    int maxNeeded = maxStackSize.GetValue() - currentStackSize.GetValue();
                     int amountUsed = Mathf.Min(maxNeeded, amount);
-                    currentStackSize.IntValue += amountUsed;
+
+                    //Fill the stack with as much as we can
+                    var newStackSize = currentStackSize.GetValue() + amountUsed;
+                    currentStackSize.SetValue(newStackSize);
+
+                    //Update the slot and amount from the new stack we used
                     amountBackfilled += amountUsed;
-                    
                     if (amountUsed > 0)
                         InventorySlotsReference.UpdateInventorySlot(data.InventorySlot);
                 }
@@ -101,16 +111,16 @@ namespace MasterInventory
             return amountBackfilled;
         }
 
-        private ItemData CreateNewItemData(ItemPickupData item, string guid)
+        private ItemData CreateNewItemData(ItemPickupData pickup, string guid)
         {
             var newData = new ItemData()
             {
                 EquipmentSlot = null,
                 InventorySlot = -1,
-                Item = item.PickupItem,
+                Item = pickup.PickupItem,
                 guid = guid,
             };
-            newData.InitializeSerializedAttributes(item.SerializedAttributeValues);
+            newData.InitializeSerializedAttributes(pickup.SerializedAttributeValues);
             OwnedItemData.Add(newData);
             GUIDLookup.Add(guid, newData);
 
@@ -125,6 +135,10 @@ namespace MasterInventory
 
         public void PreSerialize(Serializer serializer)
         {
+            foreach (ItemData data in OwnedItemData)
+            {
+                data.PreSerialize();
+            }
         }
 
         public void PostDeserialize(Serializer serializer, InventorySlots slotsReference)
@@ -156,16 +170,23 @@ namespace MasterInventory
             public EquipmentSlot EquipmentSlot = null;
             public int InventorySlot = -1;
 
-            public List<ItemAttribute> ItemAttributeData;
+            public ItemAttributes ItemAttributeData;
             public Dictionary<string, ItemAttribute> AttributeLookup;
+
+            public void PreSerialize()
+            {
+                foreach (ItemAttribute a in ItemAttributeData.GetAllAttributes())
+                {
+                    a.SaveSerializedValue();
+                }
+            }
 
             public void PostDeserialize()
             {
-
-
                 AttributeLookup = new Dictionary<string, ItemAttribute>();
-                foreach (ItemAttribute a in ItemAttributeData)
+                foreach (ItemAttribute a in ItemAttributeData.GetAllAttributes())
                 {
+                    a.InitializeSerializedValue();
                     Item.AddSerializedReference(guid, a);
                     AttributeLookup.Add(a.Key, a);
                 }
@@ -173,15 +194,19 @@ namespace MasterInventory
 
             public void InitializeSerializedAttributes(List<ItemAttribute> defaultAttributes)
             {
-                ItemAttributeData = new List<ItemAttribute>();
-                foreach (ItemAttribute attribute in Item.SerializedAttributes)
+                ItemAttributeData = new ItemAttributes();
+                foreach (ItemAttribute attribute in Item.SerializedAttributeLookup.Values)
                 {
-                    ItemAttribute attributeReference;
+
+                    ItemAttribute copyAttribute = attribute;
                     if (defaultAttributes.Any(t => t.Key == attribute.Key))
-                        attributeReference = new ItemAttribute(defaultAttributes.First(t => t.Key == attribute.Key));
-                    else attributeReference = new ItemAttribute(attribute);
+                    {
+                        copyAttribute = defaultAttributes.First(t => t.Key == attribute.Key);
+                    }
                     
-                    ItemAttributeData.Add(attributeReference);
+                    ItemAttribute attributeReference = (ItemAttribute)System.Activator.CreateInstance(attribute.GetType(), copyAttribute);
+
+                    ItemAttributeData.AddAttribute(attributeReference);
                     Item.AddSerializedReference(guid, attributeReference);
                 }
             }

@@ -21,6 +21,7 @@ public class InventoryUI : MonoBehaviour
     {
         InventorySlotsPanel.gameObject.SetActive(false);
         DebugPanel.gameObject.SetActive(false);
+        OnEnable();
     }
 
     private void Start()
@@ -28,8 +29,17 @@ public class InventoryUI : MonoBehaviour
         UpdateDebugPanel();
     }
 
+    private void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.I))
+            ToggleEnabled();
+        if (Input.GetKeyDown(KeyCode.O))
+            ToggleDebugEnabled();
+    }
+
     private void OnEnable()
     {
+        OnDisable();
         InventoryReference.OnInventoryLoaded.AddListener(UpdateInventory);
         InventoryReference.InventorySlotsReference.OnSlotChange.AddListener(UpdateSlot);
         InventoryReference.InventorySlotsReference.OnAnySlotChange.AddListener(UpdateInventory);

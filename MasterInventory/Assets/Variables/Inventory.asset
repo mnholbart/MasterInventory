@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7e747834c8da2f4ca4599a4257679bf, type: 3}
+  m_Name: Inventory
+  m_EditorClassIdentifier: 
+  serializer: {fileID: 11400000, guid: a1af8fc27adcca044a462880870781cb, type: 2}
+  InventorySlotsReference: {fileID: 11400000, guid: b3de59fb8689a074fa2e01e961286115,
+    type: 2}
+  NumInventorySlots: 20
+  EquipmentSlots: []
+  ItemTypes:
+  - {fileID: 11400000, guid: e31fd64eca073654b88beff92ce44918, type: 2}
+  - {fileID: 11400000, guid: 26810d9769578d34a9088acecb8ef82b, type: 2}
+  ItemDatabase:
+  - {fileID: 11400000, guid: 8a547a955d66f914c83ba72d1449d5b8, type: 2}
+  - {fileID: 11400000, guid: c42914dbeba371f4e84d191bed3cedf0, type: 2}
+  OnInventoryLoaded:
+    m_PersistentCalls:
+      m_Calls: []
+    m_TypeName: UnityEngine.Events.UnityEvent, UnityEngine.CoreModule, Version=0.0.0.0,
+      Culture=neutral, PublicKeyToken=null
+--- !u!114 &114485195501686358
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_PrefabParentObject: {fileID: 0}
+  m_PrefabInternal: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ca1b5c1a2ce120b468ada5870a2e0344, type: 3}
+  m_Name: InventoryState
+  m_EditorClassIdentifier: 
+  OwnedItemData:
+  - guid: 575823
+    Item: {fileID: 11400000, guid: c42914dbeba371f4e84d191bed3cedf0, type: 2}
+    EquipmentSlot: {fileID: 0}
+    InventorySlot: 0
+    ItemAttributeData:
+      FloatAttributes: []
+      IntAttributes:
+      - Key: CurrentAmmo
+        isStatic: 0
+        isRequired: 1
+        _staticValue: 0
+      BoolAttributes: []
+      StringAttributes: []
+      InventoryItemAttributes: []

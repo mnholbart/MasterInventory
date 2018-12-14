@@ -4,98 +4,183 @@ using UnityEngine;
 using UnityEditor;
 using System.IO;
 using System;
+using System.Reflection;
+using System.Linq;
 
 namespace MasterInventory
 {
     [CustomEditor(typeof(InventoryItem), true)]
     public class InventoryItemEditor : Editor
     {
+        List<AttributeType> AttributeTypes = new List<AttributeType>();
+        string[] enumDisplay;
 
         InventoryItem item;
 
         public void OnEnable()
         {
             item = (InventoryItem)target;
+            PopulateAttributeTypes();
+            enumDisplay = AttributeTypes.Select(t => t.key).ToArray();
+        }
+
+        private void PopulateAttributeTypes()
+        {
+            foreach (Type t in Assembly.GetAssembly(typeof(ItemAttribute)).GetTypes().Where(type => !type.IsAbstract && type.IsSubclassOf(typeof(ItemAttribute))))
+            {
+                string typeName = t.Name;
+                typeName = typeName.Replace("Attribute", "");
+                AttributeTypes.Add(new AttributeType(typeName, t));
+            }
+        }
+
+        private void CreateItemAttribute(Type t, bool isSerialized = false)
+        {
+            item.AddItemAttribute(t.FullName, isSerialized: isSerialized);
+        }
+
+        private void CreateAttributeMenu(GUIContent label, Rect horizontal, bool isSerialized = false)
+        {
+            if (GUILayout.Button(label, EditorStyles.toolbarDropDown))
+            {
+                GenericMenu typesMenu = new GenericMenu();
+                foreach (AttributeType t in AttributeTypes)
+                {
+                    typesMenu.AddItem(new GUIContent(t.key), false, () => CreateItemAttribute(t.type, isSerialized: isSerialized));
+                }
+
+                typesMenu.DropDown(new Rect(Screen.width, horizontal.y, 0, 16));
+                EditorGUIUtility.ExitGUI();
+            }
         }
 
         public override void OnInspectorGUI()
         {
             serializedObject.Update();
-
+            
             SerializedProperty prefab = serializedObject.FindProperty("ItemInstancePrefab");
             SerializedProperty type = serializedObject.FindProperty("MyItemType");
 
-            EditorGUILayout.PropertyField(prefab);
+            var refValue = type.objectReferenceValue;
 
+            EditorGUILayout.PropertyField(prefab);
             EditorGUILayout.PropertyField(type);
 
             if (GUILayout.Button("Clear Attributes"))
+            {
                 ClearAttributes();
+                return;
+            }
 
-            EditorGUILayout.BeginHorizontal();
+            Rect r = EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Static Attributes");
-            if (GUILayout.Button("Add Static Attribute"))
-                item.AddItemAttribute();
+            CreateAttributeMenu(new GUIContent("Add Static Attribute"), r);
             EditorGUILayout.EndHorizontal();
-            ShowElements(item.StaticAttributes);
+            ShowElements(item.InventoryItemAttributes.GetAllAttributes().Where(t => t.isStatic).ToList());
 
             EditorGUILayout.Space();
 
-            EditorGUILayout.BeginHorizontal();
+            r = EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Serialized Attributes");
-            if (GUILayout.Button("Add Saved Attribute"))
-                item.AddItemAttribute(isSerialized: true);
+            CreateAttributeMenu(new GUIContent("Add Saved Attribute"), r, isSerialized: true);
             EditorGUILayout.EndHorizontal();
-            ShowElements(item.SerializedAttributes);
+            ShowElements(item.InventoryItemAttributes.GetAllAttributes().Where(t => !t.isStatic).ToList());
+
+
 
             serializedObject.ApplyModifiedProperties();
             EditorUtility.SetDirty(item);
+
+            if (type.objectReferenceValue != refValue)
+                item.Refresh();
         }
 
         private void ShowElements(List<ItemAttribute> list)
         {
             for (int i = 0; i < list.Count; i++)
             {
-                ItemAttribute item = list[i];
+                ItemAttribute itemAttribute = list[i];
 
-                EditorGUILayout.BeginHorizontal();
-                EditorGUILayout.LabelField(item.Key.Length > 0 ? item.Key : "Attribute " + i);
-                EditorGUI.BeginDisabledGroup(item.isRequired == true);
-                item.MyDataType = (ItemAttribute.DataType)EditorGUILayout.EnumPopup(item.MyDataType);
-                if (GUILayout.Button(item.isRequired ? "Required" : "Delete"))
+                Rect r = EditorGUILayout.BeginHorizontal();
+
+                EditorGUILayout.LabelField(itemAttribute.Key.Length > 0 ? itemAttribute.Key : "Attribute " + i, GUILayout.MaxWidth(118));
+                EditorGUI.BeginDisabledGroup(itemAttribute.isRequired == true);
+                EditorGUILayout.LabelField(itemAttribute.GetAttributeName(), GUILayout.MinWidth(r.width - 200));
+
+                if (GUILayout.Button(itemAttribute.isRequired ? "Required" : "Delete", GUILayout.MaxWidth(80)))
                 {
-                    list.Remove(item);
+                    item.InventoryItemAttributes.RemoveAttribute(itemAttribute);
+                    i--;
                     continue;
                 }
-                EditorGUILayout.EndHorizontal();
 
+                EditorGUILayout.EndHorizontal();
                 EditorGUILayout.BeginHorizontal();
+
                 EditorGUILayout.LabelField("Key", GUILayout.MaxWidth(28));
-                var key = EditorGUILayout.DelayedTextField(item.Key, GUILayout.MaxWidth(90));
-                if (key != item.Key)
+                var key = EditorGUILayout.DelayedTextField(itemAttribute.Key, GUILayout.MaxWidth(90));
+                if (key != itemAttribute.Key)
                 {
-                    item.Key = key;
+                    itemAttribute.Key = key;
                 }
                 EditorGUI.EndDisabledGroup();
                 EditorGUILayout.LabelField("Value", GUILayout.MaxWidth(50));
-                switch (item.MyDataType)
+                
+                var current = itemAttribute.GetObjectValue();
+                if (current is float)
                 {
-                    case ItemAttribute.DataType.Float: item.FloatValue = EditorGUILayout.DelayedFloatField(item.FloatValue); break;
-                    case ItemAttribute.DataType.Int: item.IntValue = EditorGUILayout.DelayedIntField(item.IntValue); break;
-                    case ItemAttribute.DataType.Bool: item.BoolValue = EditorGUILayout.Toggle(item.BoolValue); break;
-                    case ItemAttribute.DataType.String: item.StringValue = EditorGUILayout.DelayedTextField(item.StringValue); break;
-                    case ItemAttribute.DataType.InventoryItem: item.InventoryItemValue = (InventoryItem)EditorGUILayout.ObjectField(item.InventoryItemValue, typeof(InventoryItem), false); break;
-                    default: Debug.LogError("Missing InventoryItemEditor display case for DataType: " + item.MyDataType); break;
+                    float s = EditorGUILayout.DelayedFloatField((float)current);
+                    if (s != (float)current)
+                        (itemAttribute as FloatAttribute).SetDefaultValue(s);
                 }
+
+                if (current is bool)
+                {
+                    bool s = EditorGUILayout.Toggle((bool)current);
+                    if (s != (bool)current)
+                        (itemAttribute as BoolAttribute).SetDefaultValue(s);
+                }
+                if (current is string)
+                {
+                    string s = EditorGUILayout.DelayedTextField((string)current);
+                    if (s != (string)current)
+                        (itemAttribute as StringAttribute).SetDefaultValue(s);
+                }
+                if (current is int)
+                {
+                    int s = EditorGUILayout.DelayedIntField((int)current);
+                    if (s != (int)current)
+                        (itemAttribute as IntAttribute).SetDefaultValue(s);
+                }
+
+                if (itemAttribute is InventoryItemAttribute)
+                {
+                    InventoryItem s = (InventoryItem)EditorGUILayout.ObjectField((InventoryItem)current, typeof(InventoryItem), false);
+                    if (s != (InventoryItem)current)
+                        (itemAttribute as InventoryItemAttribute).SetDefaultValue(s);
+                }
+
+
                 EditorGUILayout.EndHorizontal();
             }
         }
-
+        
         private void ClearAttributes()
         {
-            item.SerializedAttributes.RemoveAll(t => !t.isRequired);
-            item.StaticAttributes.RemoveAll(t => !t.isRequired);
+            item.InventoryItemAttributes.ClearAttributes();
+            item.Refresh();
         }
     }
 
+    public class AttributeType
+    {
+        public string key = "";
+        public Type type = null;
+
+        public AttributeType(string k, Type t)
+        {
+            key = k;
+            type = t;
+        }
+    }
 }
